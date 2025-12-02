@@ -40,38 +40,17 @@ const regexPatterns = {
   secret_key: /("|')?(AKIA|ASIA|AGPA|AIDA|AROA|AIPA|ANPA|ACCA|AMKA|APKA)[A-Z0-9]{16}("|')?/g
 };
 
-function layer1_regex(text) {
-    console.log("Layer 1 input:", text);
-  if (typeof text !== 'string') {
-    text = String(text || '');
-  }
+
+function extractFindings(text) {
+  if (typeof text !== 'string') text = String(text || '');
   let findings = [];
-  // Per-type risk scores
   const typeRiskScores = {
-    email: 80, 
-    phone: 85,
-    address: 70,
-    name: 60,
-    company: 60,
-    credit_card: 100,
-    ssn: 95,
-    passport: 90,
-    pan: 90,
-    aadhaar: 90,
-    ip: 60,
-    url: 50,
-    bank_account: 95,
-    ifsc: 80,
-    routing: 80,
-    license_plate: 60,
-    private_key: 100,
-    password: 100,
-    secret_key: 100
+    email: 80, phone: 85, address: 70, name: 60, company: 60, credit_card: 100, ssn: 95, passport: 90, pan: 90, aadhaar: 90,
+    ip: 60, url: 50, bank_account: 95, ifsc: 80, routing: 80, license_plate: 60, private_key: 100, password: 100, secret_key: 100
   };
   Object.entries(regexPatterns).forEach(([type, pattern]) => {
     const matches = [...text.matchAll(pattern)];
     matches.forEach(match => {
-      // For all patterns, the last capturing group is the sensitive value
       let actualValue = null;
       for (let i = match.length - 1; i > 0; i--) {
         if (match[i] && match[i].length > 3) {
@@ -82,38 +61,59 @@ function layer1_regex(text) {
       if (actualValue) {
         const riskScore = typeRiskScores[type] || 60;
         let risk = 'low';
-        // For company, only mark as high risk if context is strong (not just suffix)
         if (type === 'company') {
-          // If value is just 'Pvt Ltd' or similar, keep low risk
           if (/^(Pvt\sLtd|Ltd|LLC|Inc|Corp|PLC|Group|Associates|Partners|Corporation)$/i.test(actualValue.trim())) {
             risk = 'low';
           } else if (/([A-Z][a-zA-Z0-9& ]+\s)(Inc|LLC|Ltd|Corporation|Corp|PLC|Group|Associates|Partners|Pvt\sLtd)\b/i.test(actualValue)) {
             risk = 'high';
           }
         } else if (riskScore >= 80) {
-          // For other types, only mark as high risk if value is not generic
           if (actualValue.length > 5 && !/^test|sample|demo|none|unknown$/i.test(actualValue.trim())) {
             risk = 'high';
           }
         }
-        findings.push({
-          type,
-          value: actualValue,
-          position: [match.index, match.index + actualValue.length],
-          risk,
-          riskScore
-        });
+        findings.push({ type, value: actualValue, position: [match.index, match.index + actualValue.length], risk, riskScore });
       }
     });
   });
-  // Set overall score as the highest riskScore found, normalized to 0-1
+  return findings;
+}
+
+function layer1_regex_high(text) {
+  const findings = extractFindings(text);
+  // Block if any high-risk value is found
   let score = 0;
   if (findings.length > 0) {
     const maxRisk = Math.max(...findings.map(f => f.riskScore));
     score = maxRisk / 100;
-    if (maxRisk >= 80) score = Math.max(score, 0.8);
+    if (findings.some(f => f.risk === 'high')) score = Math.max(score, 0.8);
   }
   return { score, findings };
 }
 
-module.exports = { layer1_regex };
+function layer1_regex_medium(text) {
+  const findings = extractFindings(text);
+  // Block if any medium or high-risk value is found
+  let score = 0;
+  if (findings.length > 0) {
+    const maxRisk = Math.max(...findings.map(f => f.riskScore));
+    score = maxRisk / 100;
+    if (findings.some(f => f.risk === 'high' || f.riskScore >= 70)) score = Math.max(score, 0.7);
+  }
+  return { score, findings };
+}
+
+function layer1_regex_low(text) {
+  const findings = extractFindings(text);
+  // Only block if actual high-risk value is found, never on keywords
+  let score = 0;
+  if (findings.length > 0) {
+    const maxRisk = Math.max(...findings.map(f => f.riskScore));
+    score = maxRisk / 100;
+    if (findings.some(f => f.risk === 'high')) score = Math.max(score, 0.8);
+    else score = 0;
+  }
+  return { score, findings };
+}
+
+module.exports = { layer1_regex_high, layer1_regex_medium, layer1_regex_low };
