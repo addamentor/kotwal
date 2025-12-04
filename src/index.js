@@ -12,7 +12,7 @@ app.use('/api/auth', authRoutes);
 
 // Sync Sequelize models
 const sequelize = require('./config/db');
-sequelize.sync().then(() => {
+sequelize.sync({ alter: true }).then(() => {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`Kotwal server running on port ${PORT}`);
