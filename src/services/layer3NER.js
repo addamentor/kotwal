@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 // Layer 3: Named Entity Recognition (NER) - stub
-// In production, integrate with spaCy, HuggingFace, or similar
+// In production, integrate with spaCy
 async function layer3_ner(text) {
   try {
     const response = await axios.post('http://localhost:5000/ner', { text });
