@@ -3,6 +3,7 @@ const router = express.Router();
 
 
 const { register } = require('../controllers/authController');
+const { getUserRole } = require('../controllers/authController');
 const { login } = require('../controllers/loginController');
 const { refreshToken } = require('../controllers/refreshController');
 const { changePassword } = require('../controllers/passwordController');
@@ -12,6 +13,8 @@ const { adminChangeUserPassword } = require('../controllers/adminPasswordControl
 // User registration endpoint (table: Users)
 const authMiddleware = require('../middlewares/auth');
 router.post('/create-user', authMiddleware, register);
+// Fetch current user's role and permissions
+router.get('/user/role', authMiddleware, getUserRole);
 
 
 // Admin change password for any user in company (protected)
