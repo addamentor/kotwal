@@ -14,7 +14,7 @@ const { adminChangeUserPassword } = require('../controllers/adminPasswordControl
 const authMiddleware = require('../middlewares/auth');
 router.post('/create-user', authMiddleware, register);
 // Fetch current user's role and permissions
-router.get('/me/role', authMiddleware, getUserRole);
+router.get('/user/role', authMiddleware, getUserRole);
 
 
 // Admin change password for any user in company (protected)
