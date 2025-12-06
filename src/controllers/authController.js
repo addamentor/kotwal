@@ -37,5 +37,18 @@ async function register(req, res) {
     });
   }
 }
+  // Fetch current user's role and permissions
+  async function getUserRole(req, res) {
+    const role = req.user.role;
+    let permissions = [];
+    if (role === 'admin') {
+      permissions = ['manage_users', 'manage_models', 'view_billing', 'topup_prepaid'];
+    } else if (role === 'dev') {
+      permissions = ['send_chat', 'view_models'];
+    }
+    // Add more roles/permissions as needed
+    return res.json({ role, permissions });
+  }
 
 module.exports = { register };
+module.exports = { register, getUserRole };
