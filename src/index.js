@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
+const cors = require('cors');
 
 const routes = require('./routes');
 const authRoutes = require('./routes/auth');
@@ -9,6 +10,10 @@ const prepaidAdminRoutes = require('./routes/prepaidAdmin');
 
 app.use(express.json());
 app.use(express.text({ type: '*/*' })); // Accept plain text and JSON
+app.use(cors({
+  origin: 'http://localhost:8081', // adjust if your frontend runs on a different port
+  credentials: true
+}));
 app.use('/api', routes);
 app.use('/api/auth', authRoutes);
 app.use('/api/billing', billingRoutes);
