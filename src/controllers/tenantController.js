@@ -7,7 +7,7 @@ async function onboardTenant(req, res) {
   const sequelize = require('../config/db');
   const t = await sequelize.transaction();
   try {
-    const { name, legalName, domain, billingEmail, invoiceEmail, adminEmail, adminPassword, adminName, address, phone } = req.body;
+    const { name, legalName, domain, billingEmail, invoiceEmail, adminEmail, adminPassword, adminName, address, phone, billingType, prepaidTokens } = req.body;
     if (!name || !billingEmail || !invoiceEmail || !adminEmail || !adminPassword) {
       await t.rollback();
       return res.status(400).json({ error: 'Missing required tenant or admin fields.' });
@@ -22,6 +22,8 @@ async function onboardTenant(req, res) {
       adminEmail,
       address,
       phone,
+      billingType: billingType || 'postpaid',
+      prepaidTokens: billingType === 'prepaid' ? (prepaidTokens || 0) : 0,
     }, { transaction: t });
     // Create admin user for tenant
     const passwordHash = await bcrypt.hash(adminPassword, 10);

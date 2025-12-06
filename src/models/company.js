@@ -43,6 +43,16 @@ const Tenant = sequelize.define('Tenant', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  billingType: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'postpaid', // 'prepaid' or 'postpaid'
+  },
+  prepaidTokens: {
+    type: DataTypes.DECIMAL(18, 4),
+    allowNull: true,
+    defaultValue: 0,
+  },
   status: {
     type: DataTypes.STRING,
     defaultValue: 'active',

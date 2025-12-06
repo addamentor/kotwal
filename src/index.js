@@ -4,11 +4,15 @@ const app = express();
 
 const routes = require('./routes');
 const authRoutes = require('./routes/auth');
+const billingRoutes = require('./routes/billing');
+const prepaidAdminRoutes = require('./routes/prepaidAdmin');
 
 app.use(express.json());
 app.use(express.text({ type: '*/*' })); // Accept plain text and JSON
 app.use('/api', routes);
 app.use('/api/auth', authRoutes);
+app.use('/api/billing', billingRoutes);
+app.use('/api/prepaid-admin', prepaidAdminRoutes);
 
 // Sync Sequelize models
 const sequelize = require('./config/db');
